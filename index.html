@@ -1,0 +1,904 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STICK DUEL: RIFT ARENA — GOD MODE</title>
+<style>
+:root{
+ --bg:#080b18;--panel:#111a30;--line:#293b5d;
+ --cyan:#54eaff;--pink:#ff5686;--purple:#bd75ff;
+ --gold:#ffd76a;--text:#eff5ff;--muted:#9aabc9;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:radial-gradient(ellipse at top,#18254a,#080b18 70%);
+ color:var(--text);font-family:Arial,sans-serif;min-height:100vh;
+}
+button,select{font:inherit}
+button{
+ border:1px solid #405b83;background:#1c2c4b;color:white;
+ border-radius:9px;padding:10px 14px;font-weight:bold;cursor:pointer;
+ transition:.15s;
+}
+button:hover{background:#2c426c;transform:translateY(-1px)}
+button:disabled{opacity:.35;cursor:not-allowed;transform:none}
+button.primary{background:#075c78;border-color:#55eaff}
+button.danger{border-color:#a74664}
+button.active{background:#075c78;border-color:#55eaff}
+select{
+ background:#1c2c4b;color:white;border:1px solid #405b83;
+ border-radius:8px;padding:10px;
+}
+#app{max-width:1250px;margin:auto;padding:15px}
+header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+h1{font-size:clamp(23px,4vw,38px);margin:0;letter-spacing:2px}
+h1 span{color:var(--cyan)}
+.subtitle{font-size:11px;letter-spacing:3px;color:var(--muted);margin-top:5px}
+#topright{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.panel{
+ background:rgba(17,26,48,.94);border:1px solid var(--line);
+ border-radius:14px;padding:13px;margin-top:12px;
+ box-shadow:0 8px 30px #0003;
+}
+#screen{display:none}
+#game{width:100%;height:auto;display:block;background:#080e22;border-radius:12px;border:1px solid #314a76}
+.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.spread{justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}
+.card{
+ border:1px solid #2d4166;background:#172440;border-radius:12px;
+ padding:13px;min-height:95px;
+}
+.card h3{margin:0 0 7px;font-size:15px}
+.card p{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 10px}
+.card button{width:100%}
+.big{font-size:23px;font-weight:bold}
+.muted{color:var(--muted)}
+.small{font-size:12px;color:var(--muted);line-height:1.6}
+.stat{flex:1;min-width:150px}
+.stat strong{display:block;font-size:13px;margin-bottom:6px}
+.meter{height:12px;border-radius:20px;background:#273653;overflow:hidden}
+.fill{height:100%;width:100%;transition:width .12s}
+.hp1{background:linear-gradient(90deg,#ff477d,#ff9bb3)}
+.hp2{background:linear-gradient(90deg,#26bfe9,#9af3ff)}
+.en1{background:linear-gradient(90deg,#9253ff,#e3a0ff)}
+.en2{background:linear-gradient(90deg,#00a994,#8bffe8)}
+#message{color:var(--cyan);font-weight:bold;min-height:22px;margin-top:9px}
+#menu{display:block}
+#menu h2{margin:3px 0 12px}
+#menu .hero{
+ padding:25px;border-radius:15px;
+ background:linear-gradient(115deg,#14234a,#102d48 55%,#25183f);
+ border:1px solid #3c5883;margin-top:14px;
+}
+.hero p{color:#bdcce8;line-height:1.6;max-width:700px}
+#gameover{
+ display:none;position:absolute;inset:0;background:#070b1bdc;
+ align-items:center;justify-content:center;text-align:center;
+}
+#gameover>div{background:#14213e;border:1px solid #49638b;border-radius:16px;padding:25px;max-width:90%}
+#gamewrap{position:relative}
+#toast{
+ position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+ background:#182d4d;border:1px solid var(--cyan);border-radius:10px;
+ padding:12px 20px;display:none;z-index:10;box-shadow:0 5px 25px #0008;
+}
+#mobile{display:none;gap:8px;justify-content:space-between;margin-top:10px}
+#mobile button{min-width:48px;min-height:45px;touch-action:none}
+@media(max-width:650px){
+ #app{padding:8px}
+ #mobile{display:flex}
+ .panel{padding:10px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+ <div>
+  <h1>STICK DUEL: <span>RIFT ARENA</span></h1>
+  <div class="subtitle">GOD MODE EDITION • RIFT TECHNOLOGY • ARENA CHAMPIONSHIP</div>
+ </div>
+ <div id="topright">
+  <div class="card" style="padding:8px 13px;min-height:0">
+   <span style="color:var(--gold)">★</span>
+   <strong id="coins">0</strong>
+   <span class="small"> COINS</span>
+  </div>
+  <button onclick="showMenu()">MAIN MENU</button>
+ </div>
+</header>
+
+<section id="menu">
+ <div class="hero">
+  <div class="small" style="color:var(--cyan)">WELCOME TO THE RIFT</div>
+  <h2 style="font-size:clamp(26px,5vw,44px);margin:8px 0">ENTER THE ARENA.</h2>
+  <p>
+   Battle challengers, survive endless waves, defeat giant bosses,
+   master energy abilities, and become the ultimate Rift Champion.
+  </p>
+  <div class="row">
+   <button class="primary" onclick="startGame('bot')">QUICK PLAY</button>
+   <button onclick="startGame('versus')">LOCAL 2 PLAYER</button>
+   <button onclick="startGame('survival')">SURVIVAL</button>
+  </div>
+ </div>
+
+ <div class="panel">
+  <h2>GAME MODES</h2>
+  <div class="grid">
+   <div class="card"><h3>⚔️ Classic Duel</h3><p>One-on-one competition. First player to win the round takes the victory.</p><button onclick="startGame('versus')">PLAY</button></div>
+   <div class="card"><h3>🤖 Bot Challenge</h3><p>Fight an AI opponent that gets tougher as you improve.</p><button onclick="startGame('bot')">PLAY</button></div>
+   <div class="card"><h3>♾️ Survival</h3><p>Endless waves. Every new challenger gets stronger.</p><button onclick="startGame('survival')">PLAY</button></div>
+   <div class="card"><h3>👑 Boss Battle</h3><p>Take on a massive Rift Guardian with a huge health bar.</p><button onclick="startGame('boss')">PLAY</button></div>
+   <div class="card"><h3>👑 King of Platform</h3><p>Stay on the centre platform and push your opponent away.</p><button onclick="startGame('king')">PLAY</button></div>
+   <div class="card"><h3>💥 Chaos Arena</h3><p>Random arena conditions, changing hazards, and unpredictable matches.</p><button onclick="startGame('chaos')">PLAY</button></div>
+  </div>
+ </div>
+
+ <div class="panel">
+  <h2>PROGRESSION</h2>
+  <div class="grid">
+   <div class="card"><h3>🛍️ Rift Shop</h3><p>Spend earned coins on character colours and visual trails.</p><button onclick="openShop()">OPEN SHOP</button></div>
+   <div class="card"><h3>🏆 Achievements</h3><p>Complete challenges and collect rewards.</p><button onclick="openAchievements()">VIEW ACHIEVEMENTS</button></div>
+   <div class="card"><h3>📊 Statistics</h3><p>Track your victories, defeats, and survival records.</p><button onclick="openStats()">VIEW STATS</button></div>
+   <div class="card"><h3>⚙️ Settings</h3><p>Adjust sound, effects, and screen shake.</p><button onclick="openSettings()">SETTINGS</button></div>
+  </div>
+ </div>
+ <div class="panel">
+  <div class="row spread">
+   <div><strong>YOUR RIFT PROFILE</strong><div class="small" id="profile">Rookie Champion</div></div>
+   <button class="danger" onclick="resetSave()">RESET SAVE</button>
+  </div>
+ </div>
+</section>
+
+<section id="screen">
+ <div class="panel">
+  <div class="row spread">
+   <div class="stat"><strong id="name1">PLAYER 1</strong><div class="meter"><div class="fill hp1" id="hp1"></div></div><div class="small">HEALTH</div><div class="meter"><div class="fill en1" id="en1"></div></div><div class="small">ENERGY</div></div>
+   <div class="stat"><strong id="name2">PLAYER 2</strong><div class="meter"><div class="fill hp2" id="hp2"></div></div><div class="small">HEALTH</div><div class="meter"><div class="fill en2" id="en2"></div></div><div class="small">ENERGY</div></div>
+  </div>
+  <div class="row spread" style="margin-top:10px">
+   <div class="small" id="modeLabel">CLASSIC DUEL</div>
+   <div class="small" id="roundLabel">ROUND 1</div>
+   <div class="small" id="timer">00:00</div>
+  </div>
+  <div id="message">Ready?</div>
+ </div>
+ <div id="gamewrap">
+  <canvas id="game" width="1000" height="560"></canvas>
+  <div id="gameover"><div>
+   <div class="small" id="resultType">MATCH COMPLETE</div>
+   <h2 id="resultTitle">PLAYER 1 WINS!</h2>
+   <p id="resultText" class="muted"></p>
+   <div class="row" style="justify-content:center">
+    <button class="primary" onclick="restartMatch()">PLAY AGAIN</button>
+    <button onclick="showMenu()">MAIN MENU</button>
+   </div>
+  </div></div>
+ </div>
+ <div id="mobile">
+  <button data-key="a">◀</button><button data-key="d">▶</button>
+  <button data-key="w">JUMP</button><button data-key="s">HEAVY</button>
+  <button data-key="space">SPECIAL</button>
+ </div>
+ <div class="panel">
+  <div class="row">
+   <button onclick="togglePause()" id="pauseButton">PAUSE</button>
+   <button onclick="restartMatch()">RESTART</button>
+   <button onclick="showMenu()">QUIT MATCH</button>
+  </div>
+  <p class="small">
+   <b>PLAYER 1:</b> A/D move. W jump. Release A/D for normal pulse.
+   Hold S while moving, then release direction for heavy pulse.
+   Hold W while moving, then release direction for special pulse.
+   <br><b>PLAYER 2:</b> Arrow keys. Same system: release ←/→ to trigger.
+   Hold ↓ for heavy or ↑ for special.
+   <br><b>Energy:</b> Heavy costs 35. Special costs 100. Energy regenerates.
+  </p>
+ </div>
+</section>
+
+<section id="extra" style="display:none">
+ <div class="panel">
+  <div class="row spread"><h2 id="extraTitle">EXTRA</h2><button onclick="showMenu()">BACK</button></div>
+  <div id="extraContent"></div>
+ </div>
+</section>
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* -------------------------------------------------------
+   SAVE DATA
+------------------------------------------------------- */
+const SAVE_KEY="riftArenaGodSave_v1";
+const defaultSave={
+ coins:0,wins:0,losses:0,kills:0,bestWave:0,
+ owned:["#ff5686","#54eaff"],color1:"#ff5686",color2:"#54eaff",
+ effects:true,shake:true,sound:false,
+ achievements:[],games:0,kingWins:0,bossWins:0
+};
+let save;
+try{save={...defaultSave,...JSON.parse(localStorage.getItem(SAVE_KEY)||"{}")};}
+catch(e){save={...defaultSave};}
+function saveData(){
+ localStorage.setItem(SAVE_KEY,JSON.stringify(save));
+ updateCoins();
+}
+function updateCoins(){
+ document.getElementById("coins").textContent=save.coins;
+ document.getElementById("profile").textContent=
+  save.wins>=25?"RIFT LEGEND":save.wins>=10?"ARENA MASTER":save.wins>=3?"RISING CHAMPION":"Rookie Champion";
+}
+function toast(t){
+ const el=document.getElementById("toast");
+ el.textContent=t;el.style.display="block";
+ clearTimeout(toast.timeout);
+ toast.timeout=setTimeout(()=>el.style.display="none",2200);
+}
+updateCoins();
+
+/* -------------------------------------------------------
+   MENU AND PROGRESSION
+------------------------------------------------------- */
+function showMenu(){
+ document.getElementById("menu").style.display="block";
+ document.getElementById("screen").style.display="none";
+ document.getElementById("extra").style.display="none";
+ document.getElementById("gameover").style.display="none";
+ running=false;
+}
+function showExtra(title,html){
+ document.getElementById("menu").style.display="none";
+ document.getElementById("screen").style.display="none";
+ document.getElementById("extra").style.display="block";
+ document.getElementById("extraTitle").textContent=title;
+ document.getElementById("extraContent").innerHTML=html;
+}
+const colors=[
+ {v:"#ff5686",n:"Rift Pink",cost:0},
+ {v:"#54eaff",n:"Neon Cyan",cost:0},
+ {v:"#b875ff",n:"Royal Purple",cost:100},
+ {v:"#ffe16a",n:"Solar Gold",cost:150},
+ {v:"#5cff9a",n:"Toxic Green",cost:150},
+ {v:"#ff8d40",n:"Inferno Orange",cost:200},
+ {v:"#ffffff",n:"Phantom White",cost:250},
+ {v:"#5885ff",n:"Galaxy Blue",cost:250},
+ {v:"#ff4bdb",n:"Cosmic Pink",cost:300},
+ {v:"#a9ffef",n:"Glacier",cost:350}
+];
+function openShop(){
+ let html='<p class="small">Unlock new character colours. Your purchases are saved in this browser.</p><div class="grid">';
+ for(const c of colors){
+  const owned=save.owned.includes(c.v);
+  html+=`<div class="card"><div style="height:30px;border-radius:8px;background:c.v;margin-bottom:10px"></div><h3>{c.n}</h3><p>${owned?"Already unlocked":c.cost+" coins"}</p><button owned?"disabled":""onclick="buyColor('{c.v}',c.cost)">{owned?"UNLOCKED":"BUY"}</button></div>`;
+ }
+ html+='</div>';
+ showExtra("RIFT SHOP",html);
+}
+function buyColor(v,cost){
+ if(save.owned.includes(v))return;
+ if(save.coins<cost){toast("Not enough coins!");return;}
+ save.coins-=cost;save.owned.push(v);saveData();openShop();toast("Colour unlocked!");
+}
+function openAchievements(){
+ const items=[
+  ["first","First Victory","Win your first match.",100,()=>save.wins>=1],
+  ["five","Arena Regular","Win five matches.",200,()=>save.wins>=5],
+  ["ten","Champion","Win ten matches.",300,()=>save.wins>=10],
+  ["survive","Survivor","Reach wave five.",200,()=>save.bestWave>=5],
+  ["boss","Guardian Slayer","Defeat a boss.",250,()=>save.bossWins>=1],
+  ["king","King of the Rift","Win King of Platform.",200,()=>save.kingWins>=1],
+  ["collector","Colour Collector","Unlock five colours.",250,()=>save.owned.length>=5],
+  ["veteran","Rift Veteran","Play twenty matches.",300,()=>save.games>=20]
+ ];
+ let html='<div class="grid">';
+ for(const a of items){
+  const done=save.achievements.includes(a[0]);
+  html+=`<div class="card"><h3>${done?"🏆":"🔒"} a[1]</h3><p>{a[2]}</p><p>${a[3]} coins reward</p><button done||!a[4]()?"disabled":""onclick="claimAchievement('{a[0]}',a[3])">{done?"CLAIMED":a[4]()?"CLAIM REWARD":"LOCKED"}</button></div>`;
+ }
+ html+='</div>';
+ showExtra("ACHIEVEMENTS",html);
+}
+function claimAchievement(id,reward){
+ if(save.achievements.includes(id))return;
+ save.achievements.push(id);save.coins+=reward;saveData();openAchievements();toast("Achievement reward claimed!");
+}
+function openStats(){
+ showExtra("PLAYER STATISTICS",`
+ <div class="grid">
+ <div class="card"><h3>🏆 Victories</h3><div class="big">${save.wins}</div></div>
+ <div class="card"><h3>💫 Defeats</h3><div class="big">${save.losses}</div></div>
+ <div class="card"><h3>⭐ Total Matches</h3><div class="big">${save.games}</div></div>
+ <div class="card"><h3>👾 Challengers</h3><div class="big">${save.kills}</div></div>
+ <div class="card"><h3>♾️ Best Wave</h3><div class="big">${save.bestWave}</div></div>
+ <div class="card"><h3>🎨 Colours</h3><div class="big">${save.owned.length}</div></div>
+ </div>`);
+}
+function openSettings(){
+ showExtra("SETTINGS",`
+ <div class="card">
+ <h3>Visual Effects</h3>
+ <button onclick="save.effects=!save.effects;saveData();openSettings()">${save.effects?"EFFECTS: ON":"EFFECTS: OFF"}</button>
+ <button onclick="save.shake=!save.shake;saveData();openSettings()">${save.shake?"SCREEN SHAKE: ON":"SCREEN SHAKE: OFF"}</button>
+ <h3 style="margin-top:20px">Sound</h3>
+ <button onclick="save.sound=!save.sound;saveData();openSettings()">${save.sound?"SOUND: ON":"SOUND: OFF"}</button>
+ <p class="small">Sound uses simple generated tones. No audio files are required.</p>
+ </div>`);
+}
+function resetSave(){
+ if(!confirm("Reset all coins, unlocks, and statistics?"))return;
+ localStorage.removeItem(SAVE_KEY);save={...defaultSave};saveData();showMenu();toast("Save reset.");
+}
+
+/* -------------------------------------------------------
+   GAME ENGINE
+------------------------------------------------------- */
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const W=1000,H=560;
+const keys=new Set();
+let players=[],particles=[],pulses=[],floaters=[],platforms=[];
+let mode="bot",running=false,paused=false,gameTime=0,matchStart=0;
+let wave=1,round=1,killsThisWave=0,shake=0,arena=0;
+let boss=null,kingTimer=0,kingOwner=0,matchEnded=false;
+let lastFrame=0,raf=0,chaosTimer=0,challengeLevel=1;
+let currentArena="RIFT CORE";
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rand=(a,b)=>a+Math.random()*(b-a);
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+const arenas=[
+ {name:"RIFT CORE",bg:"#111c3d",platform:"#2c4774",water:"#087aa7"},
+ {name:"VOID STATION",bg:"#1b1239",platform:"#47346f",water:"#4b2e89"},
+ {name:"NEON CITY",bg:"#102c3d",platform:"#286079",water:"#087b8b"},
+ {name:"FROST PEAK",bg:"#182d48",platform:"#426184",water:"#3488c5"},
+ {name:"SOLAR RUINS",bg:"#38251e",platform:"#77513b",water:"#a64b3a"}
+];
+
+function makePlayer(x,color,id){
+ return {
+  id,x,y:425,vx:0,vy:0,w:25,h:62,
+  hp:100,maxHp:100,energy:100,color,
+  facing:id===1?1:-1,ground:false,stun:0,flash:0,
+  dead:false,bot:false,aiWait:0,heldDir:0,
+  score:0,combo:0,comboTime:0,invincible:0,
+  jumpLock:false,trail:[],lastAction:""
+ };
+}
+function buildPlatforms(){
+ platforms=[
+  {x:0,y:490,w:1000,h:70},
+  {x:90,y:390,w:220,h:15},
+  {x:390,y:320,w:220,h:15},
+  {x:690,y:390,w:220,h:15},
+  {x:420,y:435,w:160,h:12}
+ ];
+ if(mode==="king"){
+  platforms=[
+   {x:0,y:490,w:1000,h:70},
+   {x:280,y:370,w:440,h:22},
+   {x:380,y:300,w:240,h:14}
+  ];
+ }
+ if(arena===1)platforms[2].y=290;
+ if(arena===2)platforms[1].y=355;
+ if(arena===3)platforms[3].y=355;
+}
+function startGame(newMode){
+ mode=newMode;arena=Math.floor(Math.random()*arenas.length);
+ currentArena=arenas[arena].name;
+ wave=1;round=1;killsThisWave=0;gameTime=0;
+ challengeLevel=1;kingTimer=0;kingOwner=0;boss=null;
+ matchEnded=false;particles=[];pulses=[];floaters=[];
+ buildPlatforms();
+ players=[
+  makePlayer(260,save.color1,1),
+  makePlayer(740,save.color2,2)
+ ];
+ players[0].color=save.color1;
+ players[1].color=save.color2;
+ if(mode==="bot"||mode==="survival"||mode==="boss"||mode==="chaos"){
+  players[1].bot=true;
+ }
+ if(mode==="boss")spawnBoss();
+ if(mode==="survival")spawnEnemy();
+ if(mode==="king")kingTimer=0;
+ running=true;paused=false;
+ matchStart=performance.now();
+ document.getElementById("menu").style.display="none";
+ document.getElementById("extra").style.display="none";
+ document.getElementById("screen").style.display="block";
+ document.getElementById("gameover").style.display="none";
+ document.getElementById("pauseButton").textContent="PAUSE";
+ document.getElementById("modeLabel").textContent=mode.toUpperCase()+" • "+currentArena;
+ document.getElementById("message").textContent="THE MATCH BEGINS!";
+ document.getElementById("roundLabel").textContent="ROUND 1";
+ document.getElementById("name1").textContent="PLAYER 1";
+ document.getElementById("name2").textContent=mode==="versus"?"PLAYER 2":mode==="boss"?"RIFT GUARDIAN":"RIFT CHALLENGER";
+ if(mode==="boss"){players[1].hp=100;players[1].maxHp=100;}
+ lastFrame=performance.now();
+ if(!raf)raf=requestAnimationFrame(loop);
+}
+function restartMatch(){startGame(mode);}
+function togglePause(){
+ if(!running)return;
+ paused=!paused;
+ document.getElementById("pauseButton").textContent=paused?"RESUME":"PAUSE";
+ if(paused)document.getElementById("message").textContent="MATCH PAUSED";
+ else document.getElementById("message").textContent="BACK TO THE FIGHT!";
+}
+function spawnEnemy(){
+ const p=players[1];
+ p.x=rand(650,820);p.y=420;p.vx=0;p.vy=0;
+ p.hp=Math.min(100+(wave-1)*8,220);
+ p.maxHp=p.hp;p.energy=100;p.dead=false;p.stun=0;
+ p.color="#ffbd58";p.bot=true;
+ p.aiWait=.5;
+}
+function spawnBoss(){
+ boss={x:750,y:400,hp:650,maxHp:650,phase:1,attack:0,timer:1.2,dead:false};
+ players[1].bot=true;
+ players[1].hp=100;players[1].maxHp=100;
+ players[1].color="#bd75ff";
+ players[1].x=740;
+}
+function spawnBurst(x,y,color,count=18,power=4){
+ if(!save.effects)return;
+ for(let i=0;i<count;i++){
+  const a=Math.random()*Math.PI*2,s=rand(1,power);
+  particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+   life:rand(.25,.8),max:.8,color,size:rand(2,5)});
+ }
+}
+function floatText(x,y,text,color="#fff"){
+ floaters.push({x,y,text,color,life:1});
+}
+function playTone(freq=300,duration=.07){
+ if(!save.sound)return;
+ try{
+  const A=window.AudioContext||window.webkitAudioContext;
+  const ac=new A(),o=ac.createOscillator(),g=ac.createGain();
+  o.frequency.value=freq;o.type="sine";g.gain.value=.045;
+  o.connect(g);g.connect(ac.destination);o.start();
+  g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+duration);
+  o.stop(ac.currentTime+duration);
+ }catch(e){}
+}
+
+/* -------------------------------------------------------
+   KEY RELEASE ACTION SYSTEM
+------------------------------------------------------- */
+function controlFor(p){
+ const left=p.id===1?"a":"arrowleft";
+ const right=p.id===1?"d":"arrowright";
+ const up=p.id===1?"w":"arrowup";
+ const down=p.id===1?"s":"arrowdown";
+ const l=keys.has(left),r=keys.has(right),u=keys.has(up),d=keys.has(down);
+ const dir=(r?1:0)-(l?1:0);
+ if(dir){
+  p.vx+=dir*.78;p.facing=dir;
+  p.heldDir=dir;
+ }else{
+  p.vx*=p.ground?.78:.96;
+ }
+ if(u&&!p.jumpLock&&p.ground){
+  p.vy=-13.3;p.ground=false;p.jumpLock=true;
+  spawnBurst(p.x,p.y+20,p.color,9,2.5);
+ }
+ if(!u)p.jumpLock=false;
+ if(u&&dir)p.lastAction="special";
+ else if(d&&dir)p.lastAction="heavy";
+ else if(dir)p.lastAction="normal";
+}
+function releaseDirection(p){
+ if(!p.heldDir)return;
+ let type="normal";
+ const up=p.id===1?"w":"arrowup";
+ const down=p.id===1?"s":"arrowdown";
+ if(keys.has(up))type="special";
+ else if(keys.has(down))type="heavy";
+ launchPulse(p,type,p.heldDir);
+ p.heldDir=0;
+}
+function launchPulse(p,type,dir){
+ if(p.dead||p.stun>0)return;
+ const cost={normal:0,heavy:35,special:100}[type];
+ if(p.energy<cost){
+  floatText(p.x,p.y-55,"NOT ENOUGH ENERGY","#fff");
+  playTone(100);return;
+ }
+ p.energy-=cost;p.facing=dir;
+ const settings={
+  normal:{power:9,speed:8,radius:13,knock:4,stun:.1,color:p.color},
+  heavy:{power:19,speed:10,radius:22,knock:7,stun:.27,color:"#ffe078"},
+  special:{power:34,speed:12,radius:32,knock:12,stun:.45,color:"#d79aff"}
+ }[type];
+ pulses.push({
+  x:p.x+dir*22,y:p.y-34,vx:dir*settings.speed,
+  owner:p,type,life:.9,...settings
+ });
+ spawnBurst(p.x+dir*24,p.y-34,settings.color,type==="special"?35:15,5);
+ floatText(p.x,p.y-65,type.toUpperCase()+" PULSE",settings.color);
+ playTone(type==="special"?700:type==="heavy"?480:320);
+ p.lastAction=type;
+}
+window.addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();
+ if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();
+ if(!keys.has(k))keys.add(k);
+ if(k==="escape")togglePause();
+});
+window.addEventListener("keyup",e=>{
+ const k=e.key.toLowerCase();
+ const p1=players[0],p2=players[1];
+ if(k==="a"||k==="d"){if(p1)releaseDirection(p1);}
+ if(k==="arrowleft"||k==="arrowright"){if(p2)releaseDirection(p2);}
+ keys.delete(k);
+});
+document.querySelectorAll("#mobile button").forEach(btn=>{
+ const k=btn.dataset.key;
+ const down=e=>{e.preventDefault();keys.add(k);};
+ const up=e=>{e.preventDefault();keys.delete(k);if((k==="a"||k==="d")&&players[0])releaseDirection(players[0]);};
+ btn.addEventListener("pointerdown",down);
+ btn.addEventListener("pointerup",up);
+ btn.addEventListener("pointerleave",up);
+});
+
+/* -------------------------------------------------------
+   BOT AI
+------------------------------------------------------- */
+function botControl(p,dt){
+ const target=players[0];if(!target||target.dead)return;
+ const dx=target.x-p.x,dist=Math.abs(dx),dir=Math.sign(dx);
+ p.facing=dir||p.facing;
+ if(dist>95)p.vx+=dir*(mode==="survival"?.72:.58);
+ else p.vx*=.84;
+ if(p.ground&&Math.random()<.015)p.vy=-12;
+ p.aiWait-=dt;
+ if(p.aiWait<=0&&dist<350){
+  let type="normal";
+  if(p.energy>=100&&dist<250&&Math.random()<.3)type="special";
+  else if(p.energy>=35&&Math.random()<.55)type="heavy";
+  launchPulse(p,type,p.facing);
+  p.aiWait=rand(.45,1.05);
+ }
+ if(Math.random()<.004&&p.ground){p.vy=-12.5;p.ground=false;}
+}
+
+/* -------------------------------------------------------
+   PHYSICS
+------------------------------------------------------- */
+function physics(p,dt){
+ if(p.dead)return;
+ if(p.stun>0)p.stun=Math.max(0,p.stun-dt);
+ p.invincible=Math.max(0,p.invincible-dt);
+ p.flash=Math.max(0,p.flash-dt);
+ p.vx=clamp(p.vx,-8,8);
+ p.vy+=.62;
+ p.x+=p.vx;p.y+=p.vy;
+ p.x=clamp(p.x,14,W-14);
+ p.ground=false;
+ for(const q of platforms){
+  if(p.vy>=0&&p.x+p.w/2>q.x&&p.x-p.w/2<q.x+q.w&&
+    p.y+p.h/2>=q.y&&p.y+p.h/2-p.vy<=q.y+5){
+   p.y=q.y-p.h/2;p.vy=0;p.ground=true;
+  }
+ }
+ if(p.y+p.h/2>520){
+  if(p.invincible<=0){
+   p.hp-=30;p.invincible=1.1;p.y=420;p.vy=-12;
+   p.vx=-p.facing*5;shake=12;
+   spawnBurst(p.x,520,"#55dfff",30,7);
+   floatText(p.x,p.y-35,"WATER! -30","#72eaff");
+   playTone(150);
+  }
+ }
+ p.energy=clamp(p.energy+10*dt,0,100);
+ p.comboTime=Math.max(0,p.comboTime-dt);
+ if(p.comboTime===0)p.combo=0;
+ p.vx*=p.ground?.84:.99;
+ if(p.hp<=0&&!p.dead){
+  p.dead=true;spawnBurst(p.x,p.y,p.color,45,8);shake=16;
+ }
+}
+function applyHit(target,shot){
+ if(target.dead||target===shot.owner||target.invincible>0)return;
+ if(Math.abs(target.x-shot.x)>shot.radius+18||Math.abs(target.y-shot.y)>65)return;
+ const damage=shot.power;
+ target.hp-=damage;
+ target.vx=shot.vx*.45+shot.owner.facing*shot.knock;
+ target.vy=Math.min(target.vy,-shot.knock*.6);
+ target.stun=Math.max(target.stun,shot.stun);
+ target.flash=.18;
+ target.invincible=.12;
+ shot.owner.combo++;shot.owner.comboTime=2;
+ spawnBurst(target.x,target.y-25,shot.color,shot.type==="special"?40:17,6);
+ floatText(target.x,target.y-55,"-"+damage,shot.color);
+ if(shot.owner.combo>=3)floatText(shot.owner.x,shot.owner.y-90,shot.owner.combo+" HIT COMBO","#ffe078");
+ shake=shot.type==="special"?16:shot.type==="heavy"?9:4;
+ playTone(shot.type==="special"?850:500);
+ shot.life=0;
+}
+function updatePulses(dt){
+ for(const s of pulses){
+  s.x+=s.vx*dt*60;s.life-=dt;
+  const target=players.find(p=>p!==s.owner);
+  if(target)applyHit(target,s);
+  if(mode==="boss"&&boss&&!boss.dead&&s.owner===players[0]){
+   if(Math.abs(boss.x-s.x)<s.radius+35&&Math.abs(boss.y-s.y)<75){
+    boss.hp-=s.power*1.2;s.life=0;
+    spawnBurst(boss.x,boss.y-25,s.color,22,5);
+    floatText(boss.x,boss.y-75,"-"+Math.round(s.power*1.2),s.color);
+    if(boss.hp<=0)boss.dead=true;
+   }
+  }
+ }
+ pulses=pulses.filter(s=>s.life>0&&s.x>-60&&s.x<W+60);
+}
+function updateBoss(dt){
+ if(!boss||boss.dead)return;
+ const p=players[0];
+ boss.timer-=dt;boss.attack-=dt;
+ if(boss.timer<=0){
+  boss.timer=rand(1.5,2.4);
+  const dir=Math.sign(p.x-boss.x);
+  boss.x+=dir*rand(35,90);
+  boss.x=clamp(boss.x,600,920);
+  if(distance(boss,p)<260){
+   p.hp-=12;p.vx=-dir*8;p.vy=-8;p.stun=.35;
+   floatText(p.x,p.y-55,"GUARDIAN SLAM! -12","#d69aff");
+   spawnBurst(p.x,p.y,"#bd75ff",30,7);shake=15;
+  }else{
+   spawnBurst(boss.x,boss.y,"#bd75ff",24,6);
+  }
+ }
+ if(boss.hp<boss.maxHp*.5)boss.phase=2;
+}
+
+/* -------------------------------------------------------
+   GAME MODES
+------------------------------------------------------- */
+function updateModes(dt){
+ if(mode==="survival"&&players[1].dead&&!players[0].dead){
+  killsThisWave++;wave++;
+  save.bestWave=Math.max(save.bestWave,wave-1);
+  save.coins+=30+wave*5;saveData();
+  document.getElementById("roundLabel").textContent="WAVE "+wave;
+  floatText(500,180,"WAVE "+wave+" CLEARED!","#ffe078");
+  spawnEnemy();
+  players[0].hp=Math.min(players[0].maxHp,players[0].hp+15);
+  players[0].energy=100;
+  if(wave===5)toast("Achievement progress: Survivor!");
+ }
+ if(mode==="boss"&&boss&&boss.dead){
+  finishGame(true,"GUARDIAN DEFEATED","You defeated the Rift Guardian!");
+  save.bossWins++;save.coins+=250;saveData();
+ }
+ if(mode==="king"){
+  const p1=players[0],p2=players[1];
+  const zone={x:300,y:250,w:400,h:230};
+  const inside=p=>p.x>zone.x&&p.x<zone.x+zone.w&&p.y<zone.y+zone.h;
+  if(inside(p1)&&!inside(p2))kingOwner=1;
+  else if(inside(p2)&&!inside(p1))kingOwner=2;
+  if(kingOwner)kingTimer+=dt;
+  if(kingTimer>=30){
+   const winner=kingOwner;
+   if(winner===1){save.kingWins++;save.wins++;save.coins+=100;saveData();}
+   finishGame(winner===1,winner===1?"PLAYER 1 OWNS THE RIFT!":"PLAYER 2 WINS!","King of Platform completed.");
+  }
+  document.getElementById("message").textContent=
+   "KING OF PLATFORM • "+Math.max(0,30-kingTimer).toFixed(1)+" seconds remaining";
+ }
+ if(mode==="chaos"){
+  chaosTimer-=dt;
+  if(chaosTimer<=0){
+   chaosTimer=rand(5,9);
+   const p=players[Math.floor(Math.random()*2)];
+   p.vx+=rand(-8,8);p.vy-=rand(2,7);
+   floatText(p.x,p.y-80,"RIFT CHAOS!","#ffe078");
+   spawnBurst(p.x,p.y,"#ffe078",35,7);
+  }
+ }
+}
+function finishGame(won,title,description){
+ if(matchEnded)return;
+ matchEnded=true;running=false;
+ document.getElementById("gameover").style.display="flex";
+ document.getElementById("resultTitle").textContent=title;
+ document.getElementById("resultText").textContent=description;
+ document.getElementById("resultType").textContent="MATCH COMPLETE";
+ if(won){
+  save.wins++;save.coins+=50;
+  toast("+50 COINS • VICTORY!");
+ }else{
+  save.losses++;save.coins+=10;
+  toast("+10 COINS • MATCH COMPLETED");
+ }
+ save.games++;saveData();
+ openAchievementChecks();
+}
+function openAchievementChecks(){
+ if(save.wins>=1&&!save.achievements.includes("first"))toast("Achievement unlocked: First Victory!");
+}
+
+/* -------------------------------------------------------
+   UPDATE
+------------------------------------------------------- */
+function update(dt){
+ if(!running||paused||matchEnded)return;
+ gameTime+=dt;
+ const p1=players[0],p2=players[1];
+ if(p1.stun<=0)controlFor(p1);
+ if(p2.bot)botControl(p2,dt);
+ else if(p2.stun<=0)controlFor(p2);
+ physics(p1,dt);physics(p2,dt);
+ updatePulses(dt);updateBoss(dt);updateModes(dt);
+ for(const a of particles){
+  a.x+=a.vx;a.y+=a.vy;a.vx*=.975;a.vy*=.975;a.life-=dt;
+ }
+ particles=particles.filter(a=>a.life>0);
+ for(const a of floaters){a.y-=35*dt;a.life-=dt;}
+ floaters=floaters.filter(a=>a.life>0);
+ shake=Math.max(0,shake-30*dt);
+ if(mode!=="survival"&&mode!=="boss"&&mode!=="king"){
+  if(p1.dead||p2.dead){
+   if(p1.dead&&p2.dead)finishGame(false,"DOUBLE KNOCKOUT!","Both players were defeated.");
+   else finishGame(!p1.dead,p1.dead?(p2.bot?"THE BOT WINS!":"PLAYER 2 WINS!"):(p2.bot?"YOU WIN!":"PLAYER 1 WINS!"),"The round is over.");
+  }
+ }
+ if(mode==="survival"&&p1.dead){
+  save.bestWave=Math.max(save.bestWave,wave);saveData();
+  finishGame(false,"SURVIVAL OVER","You reached wave "+wave+".");
+ }
+ if(mode==="boss"&&p1.dead)finishGame(false,"GUARDIAN WINS","The Rift Guardian defeated you.");
+ if(mode==="king"&&(p1.dead||p2.dead))finishGame(!p1.dead,p1.dead?"PLAYER 2 WINS!":"PLAYER 1 WINS!","The platform champion has been decided.");
+ document.getElementById("timer").textContent=
+  String(Math.floor(gameTime/60)).padStart(2,"0")+":"+String(Math.floor(gameTime%60)).padStart(2,"0");
+}
+
+/* -------------------------------------------------------
+   RENDERING
+------------------------------------------------------- */
+function drawBackground(){
+ const a=arenas[arena];
+ const g=ctx.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,a.bg);g.addColorStop(1,"#080d20");
+ ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ for(let i=0;i<75;i++){
+  const x=(i*197)%W,y=(i*83)%460;
+  ctx.fillStyle="rgba(180,210,255,.3)";ctx.fillRect(x,y,2,2);
+ }
+ ctx.strokeStyle="rgba(100,170,255,.07)";ctx.lineWidth=1;
+ for(let x=0;x<W;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+ for(let y=0;y<H;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+ ctx.fillStyle="rgba(100,170,255,.05)";
+ ctx.beginPath();ctx.arc(500,250,180,0,Math.PI*2);ctx.fill();
+}
+function drawArena(){
+ const a=arenas[arena];
+ const water=ctx.createLinearGradient(0,515,0,H);
+ water.addColorStop(0,a.water);water.addColorStop(1,"#061c43");
+ ctx.fillStyle=water;ctx.fillRect(0,520,W,40);
+ ctx.strokeStyle="#6ceaff";ctx.lineWidth=3;
+ ctx.beginPath();ctx.moveTo(0,520);ctx.lineTo(W,520);ctx.stroke();
+ for(let i=0;i<9;i++){
+  const x=(performance.now()*.045+i*115)%W;
+  ctx.strokeStyle="rgba(120,240,255,.3)";
+  ctx.beginPath();ctx.moveTo(x,531+i%3*7);ctx.lineTo(x+75,531+i%3*7);ctx.stroke();
+ }
+ for(const q of platforms){
+  ctx.fillStyle=a.platform;ctx.fillRect(q.x,q.y,q.w,q.h);
+  ctx.fillStyle="#6ceaff";ctx.fillRect(q.x,q.y,q.w,3);
+  ctx.fillStyle="rgba(0,0,0,.2)";ctx.fillRect(q.x,q.y+q.h-3,q.w,3);
+ }
+ if(mode==="king"){
+  ctx.strokeStyle="#ffe078";ctx.lineWidth=2;ctx.setLineDash([8,7]);
+  ctx.strokeRect(300,250,400,230);ctx.setLineDash([]);
+  ctx.fillStyle="#ffe078";ctx.font="bold 15px Arial";ctx.textAlign="center";
+  ctx.fillText("KING ZONE",500,270);
+ }
+}
+function drawStick(p){
+ if(!p||p.dead)return;
+ ctx.save();ctx.translate(p.x,p.y);
+ const moving=Math.abs(p.vx)>.5;
+ const step=moving?Math.sin(performance.now()*.015)*8:0;
+ ctx.strokeStyle=p.flash>0?"#fff":p.color;
+ ctx.lineWidth=5;ctx.lineCap="round";ctx.lineJoin="round";
+ if(p.stun>0)ctx.rotate(Math.sin(performance.now()*.04)*.14);
+ ctx.fillStyle="rgba(0,0,0,.3)";
+ ctx.beginPath();ctx.ellipse(0,32,18,5,0,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.arc(0,-39,10,0,Math.PI*2);ctx.stroke();
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(p.facing*4,-41,2,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.moveTo(0,-29);ctx.lineTo(0,4);ctx.stroke();
+ const arm=step*.5;
+ ctx.beginPath();ctx.moveTo(0,-21);ctx.lineTo(p.facing*15,-10+arm);
+ ctx.moveTo(0,-21);ctx.lineTo(-p.facing*13,-8-arm);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(0,4);ctx.lineTo(-10+step,27);
+ ctx.moveTo(0,4);ctx.lineTo(11-step,27);ctx.stroke();
+ if(p.energy>=100){
+  ctx.strokeStyle="rgba(215,150,255,.8)";ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,-20,29+Math.sin(performance.now()*.01)*3,0,Math.PI*2);ctx.stroke();
+ }
+ ctx.restore();
+}
+function drawBoss(){
+ if(!boss||boss.dead)return;
+ ctx.save();ctx.translate(boss.x,boss.y);
+ ctx.strokeStyle="#bd75ff";ctx.lineWidth=12;ctx.lineCap="round";
+ ctx.beginPath();ctx.arc(0,-35,32,0,Math.PI*2);ctx.stroke();
+ ctx.lineWidth=15;ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(0,60);ctx.stroke();
+ ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(0,10);ctx.lineTo(-35,40);ctx.moveTo(0,10);ctx.lineTo(35,40);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(0,60);ctx.lineTo(-25,100);ctx.moveTo(0,60);ctx.lineTo(25,100);ctx.stroke();
+ ctx.fillStyle="#fff";ctx.fillRect(-15,-40,8,5);ctx.fillRect(7,-40,8,5);
+ ctx.restore();
+ ctx.fillStyle="#222";ctx.fillRect(580,60,340,15);
+ ctx.fillStyle="#bd75ff";ctx.fillRect(580,60,340*clamp(boss.hp/boss.maxHp,0,1),15);
+ ctx.strokeStyle="#fff";ctx.strokeRect(580,60,340,15);
+ ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";
+ ctx.fillText("RIFT GUARDIAN • PHASE "+boss.phase,750,50);
+}
+function draw(){
+ ctx.save();
+ if(save.shake&&shake>0)ctx.translate(rand(-shake,shake),rand(-shake,shake));
+ drawBackground();drawArena();
+ if(mode==="boss")drawBoss();
+ for(const s of pulses){
+  ctx.save();ctx.shadowBlur=24;ctx.shadowColor=s.color;ctx.fillStyle=s.color;
+  ctx.beginPath();ctx.arc(s.x,s.y,s.radius*(.85+Math.sin(performance.now()*.02)*.12),0,Math.PI*2);ctx.fill();
+  ctx.restore();
+ }
+ players.forEach(drawStick);
+ for(const p of particles){
+  ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;
+  ctx.fillRect(p.x,p.y,p.size,p.size);
+ }
+ ctx.globalAlpha=1;
+ for(const f of floaters){
+  ctx.globalAlpha=clamp(f.life,0,1);ctx.fillStyle=f.color;
+  ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText(f.text,f.x,f.y);
+ }
+ ctx.globalAlpha=1;
+ if(paused){
+  ctx.fillStyle="#050817b9";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#fff";ctx.font="bold 42px Arial";ctx.textAlign="center";
+  ctx.fillText("PAUSED",W/2,H/2);
+ }
+ ctx.restore();
+ updateHUD();
+}
+function updateHUD(){
+ if(!players.length)return;
+ const p=players[0],q=players[1];
+ document.getElementById("hp1").style.width=clamp(p.hp/p.maxHp*100,0,100)+"%";
+ document.getElementById("hp2").style.width=clamp(q.hp/q.maxHp*100,0,100)+"%";
+ document.getElementById("en1").style.width=p.energy+"%";
+ document.getElementById("en2").style.width=q.energy+"%";
+ if(mode==="boss"&&boss){
+  document.getElementById("hp2").style.width=clamp(boss.hp/boss.maxHp*100,0,100)+"%";
+ }
+ document.getElementById("roundLabel").textContent=
+  mode==="survival"?"WAVE "+wave:mode==="boss"?"BOSS BATTLE":mode==="king"?"KING ZONE: "+Math.floor(kingTimer)+"s":"ROUND "+round;
+}
+function loop(t){
+ const dt=Math.min((t-lastFrame)/1000||0,.033);lastFrame=t;
+ update(dt);draw();
+ raf=requestAnimationFrame(loop);
+}
+
+/* -------------------------------------------------------
+   STARTUP
+------------------------------------------------------- */
+showMenu();
+</script>
+</body>
+</html>
+
+
